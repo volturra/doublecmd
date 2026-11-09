@@ -690,9 +690,9 @@ begin
 
 {$ELSEIF DEFINED(X11) and (DEFINED(LCLQT) or DEFINED(LCLQT5) OR DEFINED(LCLQT6))}
 
-  if (XDisplay = nil) then Exit;
-
   // For QT we'll use Xlib to get text for a key.
+  // Letters and digits don't need Xlib, so they also work without
+  // an X server connection (e.g. under Wayland).
 
   KeySym := 0;
   case Key of
@@ -757,7 +757,7 @@ begin
     QtKey_Uacute:       KeySym := XK_uacute;
   end;
 
-  if KeySym <> 0 then
+  if (KeySym <> 0) and Assigned(XDisplay) then
   begin
     // Get character for a key with the given keysym
     // and with given modifiers applied.
