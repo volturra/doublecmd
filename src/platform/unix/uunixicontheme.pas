@@ -110,6 +110,35 @@ begin
 end;
 {$ENDIF}
 
+function GetKdeLookAndFeelIconTheme(const APackage: String): String;
+var
+  I: Integer;
+  FileName: String;
+  iniCfg: TIniFileEx;
+  DataDirs: TDynamicStringArray;
+begin
+  Result:= EmptyStr;
+  DataDirs:= GetSystemDataDirs;
+  Insert(GetUserDataDir, DataDirs, 0);
+  for I:= Low(DataDirs) to High(DataDirs) do
+  begin
+    FileName:= IncludeTrailingBackslash(DataDirs[I]) + 'plasma/look-and-feel/' +
+               APackage + '/contents/defaults';
+    if mbFileExists(FileName) then
+    try
+      iniCfg:= TIniFileEx.Create(FileName, fmOpenRead);
+      try
+        Result:= iniCfg.ReadString('kdeglobals][Icons', 'Theme', EmptyStr);
+      finally
+        iniCfg.Free;
+      end;
+      if (Length(Result) > 0) then Break;
+    except
+      // Skip
+    end;
+  end;
+end;
+
 function GetKdeIconTheme: String;
 var
   S: String;
@@ -141,10 +170,14 @@ begin
           S:= iniCfg.ReadString('KDE', 'LookAndFeelPackage', EmptyStr);
           if (Length(S) > 0) then
           begin
-            if (S = 'org.kde.breezedark.desktop') then
-              Result:= 'breeze-dark'
-            else begin
-              Result:= 'breeze';
+            Result:= GetKdeLookAndFeelIconTheme(S);
+            if (Length(Result) = 0) then
+            begin
+              if (Pos('dark', LowerCase(S)) > 0) then
+                Result:= 'breeze-dark'
+              else begin
+                Result:= 'breeze';
+              end;
             end;
           end;
         end;
