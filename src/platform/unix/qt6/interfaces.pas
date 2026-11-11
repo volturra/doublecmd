@@ -80,14 +80,19 @@ end;
 
 constructor TQtWidgetSetEx.Create;
 var
+  AName: String;
   AValue: QVariantH;
-  AName: WideString = 'doublecmd';
 begin
   FWayland:= TWaylandClient.Create;
   setenv('QT_SCALE_FACTOR_ROUNDING_POLICY', 'PassThrough', 1);
   inherited Create;
-  // Associate windows with doublecmd.desktop (Wayland app_id, portals)
-  AValue:= QVariant_Create(PWideString(@AName));
+  // Associate windows with our .desktop file explicitly instead of relying
+  // on the executable name (X11 _KDE_NET_WM_DESKTOP_FILE/_GTK_APPLICATION_ID,
+  // Wayland app_id, xdg-desktop-portal app registration).
+  // Flatpak exports the desktop file as $FLATPAK_ID.desktop.
+  AName:= GetEnvironmentVariable('FLATPAK_ID');
+  if Length(AName) = 0 then AName:= 'doublecmd';
+  AValue:= QVariant_Create(PAnsiChar(AName));
   QObject_setProperty(QCoreApplication_instance(), 'desktopFileName', AValue);
   QVariant_Destroy(AValue);
   QtWidgetSetEx:= Self
