@@ -79,10 +79,17 @@ begin
 end;
 
 constructor TQtWidgetSetEx.Create;
+var
+  AValue: QVariantH;
+  AName: WideString = 'doublecmd';
 begin
   FWayland:= TWaylandClient.Create;
   setenv('QT_SCALE_FACTOR_ROUNDING_POLICY', 'PassThrough', 1);
   inherited Create;
+  // Associate windows with doublecmd.desktop (Wayland app_id, portals)
+  AValue:= QVariant_Create(PWideString(@AName));
+  QObject_setProperty(QCoreApplication_instance(), 'desktopFileName', AValue);
+  QVariant_Destroy(AValue);
   QtWidgetSetEx:= Self
 end;
 
